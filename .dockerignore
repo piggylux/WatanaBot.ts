@@ -149,3 +149,6 @@ src/prisma/generated
 .dockerignore
 Dockerfile
 README.md
+
+# Tests
+tests

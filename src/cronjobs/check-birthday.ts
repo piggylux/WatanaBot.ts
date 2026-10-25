@@ -3,6 +3,7 @@ import { toZonedTime } from 'date-fns-tz';
 import { EmbedBuilder } from 'discord.js';
 
 import { client, PRIMARY_COLOR, prismaClient } from '../client/client';
+import { chunkLines } from '../client/message-utils';
 import { fetchGuildMembers, getYousoro } from '../client/utils';
 import { guilds } from '../prisma/generated/client';
 
@@ -55,9 +56,10 @@ async function announceBirthdays(guildInDb: guilds, userIds: string[], getUsersT
   if (members?.size) {
     const channel = guild.channels.cache.get(guildInDb.birthdayChannelId!);
     if (channel?.isSendable()) {
-      await channel.send({
-        content: `Happy Birthday ${getYousoro(guild)} 🎂\n${members.map(String).join('\n')}`,
-      });
+      const heading = `Happy Birthday ${getYousoro(guild)} 🎂\n`;
+      for (const mentions of chunkLines(members.map(String), 2000 - heading.length)) {
+        await channel.send({ content: `${heading}${mentions}` });
+      }
     }
   }
 

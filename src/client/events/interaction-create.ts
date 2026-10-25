@@ -9,6 +9,7 @@ import {
 import { ALL_COMMANDS } from '../../commands/commands';
 import { ReplyType } from '../../types/reply-type';
 import { NotImplementedError } from '../../types/slash-command';
+import { handleExpiredPageButton } from '../paginated-reply';
 import { createBotEmbed } from '../utils';
 
 async function replyError(interaction: ChatInputCommandInteraction, embed: EmbedBuilder) {
@@ -21,6 +22,11 @@ async function replyError(interaction: ChatInputCommandInteraction, embed: Embed
 }
 
 export async function handleInteractionCreate(interaction: Interaction) {
+  // Active page buttons are handled by their collector
+  if (interaction.isButton()) {
+    await handleExpiredPageButton(interaction);
+    return;
+  }
   if (!interaction.isChatInputCommand()) {
     return;
   }

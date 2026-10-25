@@ -36,8 +36,8 @@ export const client = new Client({
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildMembers,
   ],
-  // Emits GuildMemberRemove for members missing from the cache
-  partials: [Partials.GuildMember],
+  // Receive uncached DMs and member removals for members missing from the cache
+  partials: [Partials.Channel, Partials.GuildMember],
 });
 export const rest = new REST().setToken(config.token);
 export const prismaClient = new PrismaClient({

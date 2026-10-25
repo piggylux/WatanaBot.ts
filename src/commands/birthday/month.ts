@@ -1,8 +1,10 @@
 import { format } from 'date-fns';
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
-import { chunk, groupBy } from 'lodash';
+import { groupBy } from 'lodash';
 
 import { PRIMARY_COLOR, prismaClient } from '../../client/client';
+import { chunkLines } from '../../client/message-utils';
+import { replyWithEmbedPages } from '../../client/paginated-reply';
 import { fetchGuildMembers, parseBirthday } from '../../client/utils';
 
 export async function month(interaction: ChatInputCommandInteraction<'cached'>) {
@@ -28,22 +30,34 @@ export async function month(interaction: ChatInputCommandInteraction<'cached'>) 
       users.filter(({ userId }) => members.has(userId)),
       ({ birthdayDay }) => birthdayDay,
     ),
-  ).map(([day, birthdayUsers]) => ({
-    name: `🎂 ${format(parseBirthday(Number(day), birthdayMonth), 'dd/MM')}`,
-    value: birthdayUsers.map(({ userId }) => `${members.get(userId)}`).join('\n'),
-  }));
+  ).flatMap(([day, birthdayUsers]) =>
+    chunkLines(
+      birthdayUsers.map(({ userId }) => `${members.get(userId)}`),
+      1024,
+    ).map(value => ({
+      name: `🎂 ${format(parseBirthday(Number(day), birthdayMonth), 'dd/MM')}`,
+      value,
+    })),
+  );
 
-  // An embed holds at most 25 fields
-  const [firstFields = [], ...otherFields] = chunk(fields, 25);
-  const embeds = [
+  const createEmbed = () =>
     new EmbedBuilder()
       .setColor(PRIMARY_COLOR)
-      .setTitle(`Birthdays in ${format(parseBirthday(1, birthdayMonth), 'LLLL')}`)
-      .addFields(firstFields),
-    ...otherFields.map(dayFields =>
-      new EmbedBuilder().setColor(PRIMARY_COLOR).addFields(dayFields),
-    ),
-  ];
+      .setTitle(`Birthdays in ${format(parseBirthday(1, birthdayMonth), 'LLLL')}`);
+  let embed = createEmbed();
+  const embeds = [embed];
 
-  await interaction.editReply({ embeds });
+  // Each page must respect the 25-field and 6000-character embed limits.
+  for (const field of fields) {
+    if (
+      embed.data.fields?.length === 25 ||
+      embed.length + field.name.length + field.value.length > 6000
+    ) {
+      embed = createEmbed();
+      embeds.push(embed);
+    }
+    embed.addFields(field);
+  }
+
+  await replyWithEmbedPages(interaction, embeds);
 }

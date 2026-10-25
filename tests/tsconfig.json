@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // Tests run on Bun, which supports top-level await
+    "module": "preserve",
+    "types": ["bun"]
+  },
+  "include": ["."]
+}

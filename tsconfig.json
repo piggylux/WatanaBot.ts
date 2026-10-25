@@ -6,6 +6,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    // The bot runs on Node: keep Bun globals, used by the tests, out of the source types
+    "types": ["node"]
+  },
+  "include": ["src", "prisma.config.ts"]
 }
