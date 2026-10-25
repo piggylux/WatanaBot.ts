@@ -29,12 +29,9 @@ jobs:
         with:
           node-version: 26
 
+      # Also generates the Prisma client (postinstall), needed by type-aware lint rules
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      # Type-aware lint rules need the generated Prisma client types
-      - name: Generate Prisma client
-        run: bunx prisma generate
 
       - name: Run oxlint
         run: bunx oxlint

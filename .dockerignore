@@ -138,3 +138,6 @@ dist
 
 # Bot configuration file
 config.json
+
+# Prisma generated client
+src/prisma/generated

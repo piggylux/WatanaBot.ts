@@ -2,12 +2,12 @@ FROM node:26
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json prisma.config.ts ./
+COPY src/prisma ./src/prisma
 
 RUN npm install
 
 COPY . .
-RUN npx prisma generate
 
 EXPOSE 8000
 CMD npm start
