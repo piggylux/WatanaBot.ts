@@ -19,6 +19,8 @@
     "eslint/no-var": "error",
     "eslint/prefer-const": "error",
     "eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
     "typescript/restrict-template-expressions": "off"
   },
   "ignorePatterns": ["src/prisma/generated"]

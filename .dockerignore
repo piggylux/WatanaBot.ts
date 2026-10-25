@@ -141,3 +141,11 @@ config.json
 
 # Prisma generated client
 src/prisma/generated
+
+# Not needed in the image
+.git
+.github
+.husky
+.dockerignore
+Dockerfile
+README.md

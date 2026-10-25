@@ -1,31 +1,49 @@
 import {
   ChatInputCommandInteraction,
+  InteractionContextType,
+  MessageFlags,
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js';
 
 import { SlashCommand } from './slash-command';
 
-export class NotImplementedError extends Error {}
+type SubcommandHandler = (interaction: ChatInputCommandInteraction<'cached'>) => Promise<void>;
 
+/**
+ * Command made of subcommands, only available in guilds
+ */
 export class SlashCommandGroup extends SlashCommand {
-  subcommands: Record<string, Function> = {};
+  subcommands: Record<string, SubcommandHandler> = {};
+
+  constructor() {
+    super();
+    this.setContexts(InteractionContextType.Guild);
+  }
 
   async execute(interaction: ChatInputCommandInteraction) {
+    if (!interaction.inCachedGuild()) {
+      await interaction.reply({
+        content: `Command ${interaction.commandName} can only be used in a server`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
     const subcommand = interaction.options.getSubcommand();
     if (subcommand in this.subcommands) {
-      this.subcommands[subcommand](interaction);
+      await this.subcommands[subcommand](interaction);
     } else {
       await interaction.reply({
         content: `Command ${interaction.commandName} ${subcommand} doesn't exist`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }
 
   addSlashSubcommand(
     input: (subcommandGroup: SlashCommandSubcommandBuilder) => SlashCommandSubcommandBuilder,
-    execute: (interaction: ChatInputCommandInteraction) => void,
+    execute: SubcommandHandler,
   ): SlashCommandSubcommandsOnlyBuilder {
     const subcommand = input(new SlashCommandSubcommandBuilder());
     this.subcommands[subcommand.name] = execute;

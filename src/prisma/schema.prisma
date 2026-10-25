@@ -17,7 +17,7 @@ model users {
   birthdayMonth Int?
   birthdayDay   Int?
 
-  @@index([userId, birthdayDay, birthdayMonth])
+  @@index([birthdayMonth, birthdayDay])
 }
 
 model guilds {

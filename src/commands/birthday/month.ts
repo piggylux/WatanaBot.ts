@@ -1,11 +1,15 @@
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
-import { groupBy } from 'lodash';
+import { chunk, groupBy } from 'lodash';
 
 import { PRIMARY_COLOR, prismaClient } from '../../client/client';
+import { fetchGuildMembers, parseBirthday } from '../../client/utils';
 
-export async function month(interaction: ChatInputCommandInteraction) {
+export async function month(interaction: ChatInputCommandInteraction<'cached'>) {
   const birthdayMonth = interaction.options.getInteger('month') ?? new Date().getUTCMonth() + 1;
+
+  // Fetching guild members can take longer than the 3 seconds allowed to reply
+  await interaction.deferReply();
 
   const users = await prismaClient.users.findMany({
     where: { birthdayMonth, birthdayDay: { not: null } },
@@ -14,29 +18,32 @@ export async function month(interaction: ChatInputCommandInteraction) {
   });
 
   // Guild members among the selected users in database
-  const memberDict = Object.fromEntries(
-    (
-      await interaction.guild!.members.fetch({
-        user: users.map(({ userId }) => userId),
-      })
-    ).map(member => [member.id, member]),
+  const members = await fetchGuildMembers(
+    interaction.guild,
+    users.map(({ userId }) => userId),
   );
 
-  const embed = new EmbedBuilder()
-    .setColor(PRIMARY_COLOR)
-    .setTitle(`Birthdays in ${format(parse(`${birthdayMonth}`, 'M', new Date()), 'LLLL')}`);
-
-  Object.entries(
+  const fields = Object.entries(
     groupBy(
-      users.filter(({ userId }) => userId in memberDict),
+      users.filter(({ userId }) => members.has(userId)),
       ({ birthdayDay }) => birthdayDay,
     ),
-  ).forEach(([day, birthdayUsers]) =>
-    embed.addFields({
-      name: `🎂 ${format(parse(`${day} ${birthdayMonth}`, 'd M', new Date()), 'dd/MM')}`,
-      value: birthdayUsers.map(({ userId }) => `${memberDict[userId]}`).join('\n'),
-    }),
-  );
+  ).map(([day, birthdayUsers]) => ({
+    name: `🎂 ${format(parseBirthday(Number(day), birthdayMonth), 'dd/MM')}`,
+    value: birthdayUsers.map(({ userId }) => `${members.get(userId)}`).join('\n'),
+  }));
 
-  await interaction.reply({ embeds: [embed] });
+  // An embed holds at most 25 fields
+  const [firstFields = [], ...otherFields] = chunk(fields, 25);
+  const embeds = [
+    new EmbedBuilder()
+      .setColor(PRIMARY_COLOR)
+      .setTitle(`Birthdays in ${format(parseBirthday(1, birthdayMonth), 'LLLL')}`)
+      .addFields(firstFields),
+    ...otherFields.map(dayFields =>
+      new EmbedBuilder().setColor(PRIMARY_COLOR).addFields(dayFields),
+    ),
+  ];
+
+  await interaction.editReply({ embeds });
 }

@@ -18,17 +18,18 @@ export class AvatarCommand extends SlashCommand {
   }
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    const member = getDefaultInteractionOptionMember(interaction, 'member');
+    const user = interaction.options.getUser('member') ?? interaction.user;
+    // Null outside of guilds or when the user is not a member, the user avatar is used instead
+    const member = interaction.inCachedGuild()
+      ? getDefaultInteractionOptionMember(interaction, 'member')
+      : null;
     const original = interaction.options.getBoolean('original');
 
     await interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setDescription(`${member}`)
-          .setImage(
-            (original ? member.user : member).avatarURL({ size: 4096 }) ??
-              member.user.avatarURL({ size: 4096 }),
-          ),
+          .setDescription(`${member ?? user}`)
+          .setImage((original || !member ? user : member).displayAvatarURL({ size: 4096 })),
       ],
     });
   }

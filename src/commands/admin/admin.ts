@@ -1,6 +1,8 @@
-import { PermissionFlagsBits } from 'discord-api-types/v10';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 
-import { client } from '../../client/client';
+import { shutdown } from '../../client/client';
+import { createBotEmbed, isBotOwner } from '../../client/utils';
+import { ReplyType } from '../../types/reply-type';
 import { SlashCommandGroup } from '../../types/slash-command-group';
 import { setBirthdayChannel } from './set-birthday-channel';
 import { setLogsChannel } from './set-log-channel';
@@ -12,13 +14,29 @@ export class AdminCommand extends SlashCommandGroup {
   constructor() {
     super();
 
+    this.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+
     this.addSlashSubcommand(
       subCommand => subCommand.setName('shutdown').setDescription('Shutdown Watanabot'),
-      async interaction =>
-        interaction
-          .reply({ content: 'Shutting down...', ephemeral: true })
-          .then(() => client.destroy()),
-    ).setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+      async interaction => {
+        // Shutting down affects every guild, so only the bot owner is allowed to
+        if (!(await isBotOwner(interaction))) {
+          await interaction.reply({
+            embeds: [
+              createBotEmbed({
+                description: 'Only the bot owner can shut me down',
+                replyType: ReplyType.ERROR,
+              }),
+            ],
+            flags: MessageFlags.Ephemeral,
+          });
+          return;
+        }
+
+        await interaction.reply({ content: 'Shutting down...', flags: MessageFlags.Ephemeral });
+        await shutdown();
+      },
+    );
 
     this.addSlashSubcommand(
       subCommand =>
@@ -29,7 +47,7 @@ export class AdminCommand extends SlashCommandGroup {
             option.setName('clear').setDescription('Clear the registered channel'),
           ),
       interaction => setBirthdayChannel(interaction),
-    ).setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+    );
 
     this.addSlashSubcommand(
       subCommand =>
@@ -40,6 +58,6 @@ export class AdminCommand extends SlashCommandGroup {
             option.setName('clear').setDescription('Clear the registered channel'),
           ),
       interaction => setLogsChannel(interaction),
-    ).setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+    );
   }
 }

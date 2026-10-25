@@ -1,3 +1,5 @@
+import * as path from 'node:path';
+
 import { ChatInputCommandInteraction } from 'discord.js';
 
 import { SlashCommand } from '../../types/slash-command';
@@ -8,7 +10,7 @@ export class HentaiCommand extends SlashCommand {
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.reply({
-      files: ['src/assets/nothentai.jpg'],
+      files: [path.join(__dirname, '../../assets/nothentai.jpg')],
     });
   }
 }

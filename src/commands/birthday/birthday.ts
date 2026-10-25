@@ -1,4 +1,3 @@
-import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { APIApplicationCommandOptionChoice } from 'discord.js';
 
 import { SlashCommandGroup } from '../../types/slash-command-group';
@@ -80,9 +79,10 @@ export class BirthdayCommand extends SlashCommandGroup {
       interaction => month(interaction),
     );
 
+    // Discord only supports permissions on whole commands, so check verifies them itself
     this.addSlashSubcommand(
       subCommand => subCommand.setName('check').setDescription('Manually run birthday check'),
       interaction => check(interaction),
-    ).setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+    );
   }
 }

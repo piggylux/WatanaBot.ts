@@ -1,18 +1,17 @@
 import { Message } from 'discord.js';
 
-import { client } from '../client';
 import { getYousoro } from '../utils';
 
 export async function handleMessageCreate(message: Message<boolean>) {
-  const content = message.content.toLowerCase();
-
   if (message.author.bot) {
     return;
   }
 
+  const content = message.content.toLowerCase();
+
   if (message.inGuild()) {
-    if ((content.includes('yousoro') || content.includes('sylux6yo')) && !message.author.bot) {
-      const reaction = message.guild?.emojis?.cache?.find(({ name }) => name === 'yousoro');
+    if (content.includes('yousoro') || content.includes('sylux6yo')) {
+      const reaction = message.guild.emojis.cache.find(({ name }) => name === 'yousoro');
       if (reaction) {
         await message.react(reaction);
       }
@@ -24,18 +23,14 @@ export async function handleMessageCreate(message: Message<boolean>) {
       await message.channel.send('YOUSORO!~ (> ᴗ •)ゞ');
     }
 
-    if (message.mentions.has(client.user!)) {
-      if (content.includes('lewd')) {
-        await message.channel.send({
-          content: "I'm not lewd!",
-          reply: { messageReference: message },
-        });
-      } else if (!message.mentions.everyone) {
-        await message.channel.send({
-          content: getYousoro(message.guild),
-          reply: { messageReference: message },
-        });
-      }
+    if (
+      !message.mentions.everyone &&
+      message.mentions.has(message.client.user, { ignoreRoles: true })
+    ) {
+      await message.channel.send({
+        content: content.includes('lewd') ? "I'm not lewd!" : getYousoro(message.guild),
+        reply: { messageReference: message },
+      });
     }
   }
 }

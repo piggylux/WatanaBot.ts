@@ -9,7 +9,7 @@ export class RollCommand extends SlashCommand {
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.reply({
-      embeds: [createBotEmbed({ description: `${Math.floor(Math.random() * 101)}` })],
+      embeds: [createBotEmbed({ description: `${Math.floor(Math.random() * 100) + 1}` })],
     });
   }
 }

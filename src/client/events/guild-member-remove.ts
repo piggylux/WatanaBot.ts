@@ -1,6 +1,6 @@
 import { GuildMember, PartialGuildMember } from 'discord.js';
 
-import { client, prismaClient } from '../client';
+import { prismaClient } from '../client';
 import { createBotEmbed } from '../utils';
 
 export async function handleGuildMemberRemove(member: GuildMember | PartialGuildMember) {
@@ -9,10 +9,8 @@ export async function handleGuildMemberRemove(member: GuildMember | PartialGuild
   });
 
   if (guild && guild.logsChannelId) {
-    const channel = client.guilds.cache
-      .get(guild.logsChannelId)
-      ?.channels.cache.get(guild.logsChannelId);
-    if (channel?.isTextBased()) {
+    const channel = member.guild.channels.cache.get(guild.logsChannelId);
+    if (channel?.isSendable()) {
       await channel.send({
         embeds: [createBotEmbed({ description: `${member.displayName} has left` })],
       });

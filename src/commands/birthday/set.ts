@@ -1,14 +1,19 @@
-import { format, isValid, parse } from 'date-fns';
-import { ChatInputCommandInteraction, User } from 'discord.js';
+import { format, isValid } from 'date-fns';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { prismaClient } from '../../client/client';
-import { createBotEmbed, getDefaultInteractionOptionMember } from '../../client/utils';
+import {
+  createBotEmbed,
+  getDefaultInteractionOptionMember,
+  isBotOwner,
+  parseBirthday,
+} from '../../client/utils';
 import { ReplyType } from '../../types/reply-type';
 
-export async function set(interaction: ChatInputCommandInteraction) {
+export async function set(interaction: ChatInputCommandInteraction<'cached'>) {
   const birthdayDay = interaction.options.getInteger('day', true);
   const birthdayMonth = interaction.options.getInteger('month', true);
-  const birthday = parse(`${birthdayDay} ${birthdayMonth}`, 'd M', new Date());
+  const birthday = parseBirthday(birthdayDay, birthdayMonth);
 
   // Date validation
   if (!isValid(birthday)) {
@@ -19,32 +24,41 @@ export async function set(interaction: ChatInputCommandInteraction) {
           replyType: ReplyType.ERROR,
         }),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   const member = getDefaultInteractionOptionMember(interaction, 'member');
+  if (!member) {
+    await interaction.reply({
+      embeds: [
+        createBotEmbed({
+          description: 'This user is not a member of this server',
+          replyType: ReplyType.ERROR,
+        }),
+      ],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
   // Permissions validation
-  if (member.id !== interaction.user.id) {
-    const owner: User = (await interaction.client.application.fetch()).owner as User;
-
-    if (
-      interaction.member?.user.id !== interaction.guild?.ownerId &&
-      interaction.member?.user.id !== owner.id
-    ) {
-      await interaction.reply({
-        embeds: [
-          createBotEmbed({
-            description: "You don't have enough permissions to set a birthday for another member",
-            replyType: ReplyType.ERROR,
-          }),
-        ],
-        ephemeral: true,
-      });
-      return;
-    }
+  if (
+    member.id !== interaction.user.id &&
+    interaction.user.id !== interaction.guild.ownerId &&
+    !(await isBotOwner(interaction))
+  ) {
+    await interaction.reply({
+      embeds: [
+        createBotEmbed({
+          description: "You don't have enough permissions to set a birthday for another member",
+          replyType: ReplyType.ERROR,
+        }),
+      ],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
   }
 
   await prismaClient.users.upsert({
@@ -62,6 +76,6 @@ export async function set(interaction: ChatInputCommandInteraction) {
         )}`,
       }),
     ],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

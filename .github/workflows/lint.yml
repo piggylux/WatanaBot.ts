@@ -38,3 +38,6 @@ jobs:
 
       - name: Check formatting
         run: bunx oxfmt --check
+
+      - name: Check types
+        run: bun run typecheck

@@ -1,25 +1,18 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { prismaClient } from '../../client/client';
 
-export async function setLogsChannel(interaction: ChatInputCommandInteraction) {
-  if (!interaction.guildId) {
-    await interaction.reply({
-      content: 'This command cannot be run here',
-      ephemeral: true,
-    });
-    return;
-  }
-
+export async function setLogsChannel(interaction: ChatInputCommandInteraction<'cached'>) {
   if (interaction.options.getBoolean('clear')) {
-    await prismaClient.guilds.update({
+    // updateMany does not throw when the guild has never been registered
+    await prismaClient.guilds.updateMany({
       where: { guildId: interaction.guildId },
       data: { logsChannelId: null },
     });
 
     await interaction.reply({
       content: 'Logs channel has been cleared',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     return;
@@ -33,6 +26,6 @@ export async function setLogsChannel(interaction: ChatInputCommandInteraction) {
 
   await interaction.reply({
     content: 'Logs will be printed in this channel',
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

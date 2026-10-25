@@ -1,9 +1,24 @@
-import { Interaction } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  Interaction,
+  InteractionReplyOptions,
+  MessageFlags,
+} from 'discord.js';
 
 import { ALL_COMMANDS } from '../../commands/commands';
 import { ReplyType } from '../../types/reply-type';
 import { NotImplementedError } from '../../types/slash-command';
 import { createBotEmbed } from '../utils';
+
+async function replyError(interaction: ChatInputCommandInteraction, embed: EmbedBuilder) {
+  const options: InteractionReplyOptions = { embeds: [embed], flags: MessageFlags.Ephemeral };
+  if (interaction.replied || interaction.deferred) {
+    await interaction.followUp(options);
+  } else {
+    await interaction.reply(options);
+  }
+}
 
 export async function handleInteractionCreate(interaction: Interaction) {
   if (!interaction.isChatInputCommand()) {
@@ -15,40 +30,28 @@ export async function handleInteractionCreate(interaction: Interaction) {
       try {
         await ALL_COMMANDS[interaction.commandName].execute(interaction);
       } catch (error) {
-        if (error instanceof NotImplementedError) {
-          await interaction.reply({
-            embeds: [
-              createBotEmbed({
-                description: `Command ${interaction.commandName} is not implemented`,
-                replyType: ReplyType.ERROR,
-              }),
-            ],
-            ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
-            embeds: [
-              createBotEmbed({
-                description: `I couldn't execute your command:\n${error}`,
-                replyType: ReplyType.ERROR,
-              }),
-            ],
-            ephemeral: true,
-          });
-        }
+        console.error(error);
+        await replyError(
+          interaction,
+          createBotEmbed({
+            description:
+              error instanceof NotImplementedError
+                ? `Command ${interaction.commandName} is not implemented`
+                : "I couldn't execute your command",
+            replyType: ReplyType.ERROR,
+          }),
+        );
       }
     } else {
-      await interaction.reply({
-        embeds: [
-          createBotEmbed({
-            description: `Command ${interaction.commandName} doesn't exist`,
-            replyType: ReplyType.ERROR,
-          }).setFooter({
-            text: 'request feature at https://github.com/Sylux6/WatanaBot.ts/issues',
-          }),
-        ],
-        ephemeral: true,
-      });
+      await replyError(
+        interaction,
+        createBotEmbed({
+          description: `Command ${interaction.commandName} doesn't exist`,
+          replyType: ReplyType.ERROR,
+        }).setFooter({
+          text: 'request feature at https://github.com/Sylux6/WatanaBot.ts/issues',
+        }),
+      );
     }
   } catch (e) {
     console.error(e);
