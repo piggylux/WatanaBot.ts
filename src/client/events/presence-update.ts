@@ -1,7 +1,8 @@
 import { ActivityType, Presence } from 'discord.js';
+
 import { retryableFetch } from '../utils';
 
-export function handlePresenceUpdate(_: Presence | null, newPresence: Presence) {
+export async function handlePresenceUpdate(_: Presence | null, newPresence: Presence) {
   if (!newPresence.guild || !newPresence.member) {
     return;
   }
@@ -13,9 +14,9 @@ export function handlePresenceUpdate(_: Presence | null, newPresence: Presence) 
   try {
     if (role) {
       if (isStreaming) {
-        retryableFetch(() => newPresence.member!.roles.add(role));
+        await retryableFetch(() => newPresence.member!.roles.add(role));
       } else {
-        retryableFetch(() => newPresence.member!.roles.remove(role));
+        await retryableFetch(() => newPresence.member!.roles.remove(role));
       }
     }
   } catch (error: any) {

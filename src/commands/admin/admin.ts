@@ -1,4 +1,5 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
+
 import { client } from '../../client/client';
 import { SlashCommandGroup } from '../../types/slash-command-group';
 import { setBirthdayChannel } from './set-birthday-channel';

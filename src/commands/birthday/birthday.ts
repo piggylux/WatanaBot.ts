@@ -1,6 +1,6 @@
+import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { APIApplicationCommandOptionChoice } from 'discord.js';
 
-import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { SlashCommandGroup } from '../../types/slash-command-group';
 import { check } from './check';
 import { get } from './get';

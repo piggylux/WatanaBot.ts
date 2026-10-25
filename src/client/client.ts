@@ -1,9 +1,13 @@
 import * as fs from 'node:fs';
 
+import { PrismaPg } from '@prisma/adapter-pg';
 import { Client, GatewayIntentBits, HexColorString, REST } from 'discord.js';
+import dotenv from 'dotenv';
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../prisma/generated/client';
 import { Config } from '../types/config';
+
+dotenv.config({ quiet: true });
 
 function getConfig(): Config {
   if (fs.existsSync('config.json')) {
@@ -31,5 +35,7 @@ export const client = new Client({
   ],
 });
 export const rest = new REST().setToken(config.token);
-export const prismaClient = new PrismaClient();
+export const prismaClient = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
 export const PRIMARY_COLOR: HexColorString = '#5594D7';

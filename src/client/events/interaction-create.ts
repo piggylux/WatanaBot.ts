@@ -16,7 +16,7 @@ export async function handleInteractionCreate(interaction: Interaction) {
         await ALL_COMMANDS[interaction.commandName].execute(interaction);
       } catch (error) {
         if (error instanceof NotImplementedError) {
-          interaction.reply({
+          await interaction.reply({
             embeds: [
               createBotEmbed({
                 description: `Command ${interaction.commandName} is not implemented`,
@@ -26,7 +26,7 @@ export async function handleInteractionCreate(interaction: Interaction) {
             ephemeral: true,
           });
         } else {
-          interaction.reply({
+          await interaction.reply({
             embeds: [
               createBotEmbed({
                 description: `I couldn't execute your command:\n${error}`,
@@ -38,7 +38,7 @@ export async function handleInteractionCreate(interaction: Interaction) {
         }
       }
     } else {
-      interaction.reply({
+      await interaction.reply({
         embeds: [
           createBotEmbed({
             description: `Command ${interaction.commandName} doesn't exist`,

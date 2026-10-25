@@ -21,17 +21,17 @@ export async function handleMessageCreate(message: Message<boolean>) {
 
   if (message.channel.isSendable()) {
     if (content.includes('zensoku zenshin')) {
-      message.channel.send('YOUSORO!~ (> ᴗ •)ゞ');
+      await message.channel.send('YOUSORO!~ (> ᴗ •)ゞ');
     }
 
     if (message.mentions.has(client.user!)) {
       if (content.includes('lewd')) {
-        message.channel.send({
+        await message.channel.send({
           content: "I'm not lewd!",
           reply: { messageReference: message },
         });
       } else if (!message.mentions.everyone) {
-        message.channel.send({
+        await message.channel.send({
           content: getYousoro(message.guild),
           reply: { messageReference: message },
         });

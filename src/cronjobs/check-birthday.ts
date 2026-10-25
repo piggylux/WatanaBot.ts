@@ -1,6 +1,7 @@
 import { toZonedTime } from 'date-fns-tz';
 import { EmbedBuilder, TextChannel } from 'discord.js';
-import { PRIMARY_COLOR, client, prismaClient } from '../client/client';
+
+import { client, PRIMARY_COLOR, prismaClient } from '../client/client';
 import { getYousoro } from '../client/utils';
 
 export async function checkBirthday() {

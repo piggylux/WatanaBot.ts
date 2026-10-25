@@ -1,4 +1,5 @@
 import { ChatInputCommandInteraction } from 'discord.js';
+
 import { prismaClient } from '../../client/client';
 
 export async function setLogsChannel(interaction: ChatInputCommandInteraction) {
